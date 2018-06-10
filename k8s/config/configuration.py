@@ -44,7 +44,9 @@ class Configuration(object):
             return True
         return False
 
-    def token(self, context_name):
+    @property
+    def token(self, context_name=None):
+        context_name = context_name if context_name else self.config_dict['current-context']
         provider = self.node['users'].get_item_with_context_name(context_name)['user']
         if 'access-token' not in provider.value or self.token_is_expired(provider):
             self._refresh_gcp_token(provider)
@@ -52,7 +54,9 @@ class Configuration(object):
         token = "Bearer %s" % provider.value.get('access-token')
         return token
 
-    def host(self, context_name):
+    @property
+    def host(self, context_name=None):
+        context_name = context_name if context_name else self.config_dict['current-context']
         host = self.node['clusters'].get_item_with_context_name(context_name)['cluster']['server']
         return host
 
