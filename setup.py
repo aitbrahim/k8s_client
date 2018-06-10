@@ -32,7 +32,7 @@ setup(
     install_requires=REQUIRES,
     tests_require=TESTS_REQUIRES,
     extras_require=EXTRAS,
-    packages=['k8s','k8s.client', 'examples'],
+    packages=['k8s','k8s.client', 'examples', 'k8s.config'],
     include_package_data=True,
     long_description="""\
     Python k8s for kubernetes http://kubernetes.io/

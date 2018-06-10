@@ -4,7 +4,8 @@ from k8s.config.configuration import load_config
 
 def main():
 
-    init_config()
+    load_config()
+    import pdb;pdb.set_trace()
 
     client = CoreV1Api()
     print("Listing pods for all namespace :")
