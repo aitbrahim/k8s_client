@@ -1,45 +1,44 @@
 import os
-import google.auth
-import oauthlib.oauth2
-import urllib3
 import datetime
+import google.auth
 import google.auth.transport.requests
 from k8s.utils import parse_as_yaml_file
-from .dateutil import UTC, format_rfc3339, parse_rfc3339
 
 DEFUALT_FILE_CONFIG = "~/.kube/config"
 
 
-# class NodeCofig(object):
-#
-#     def __init__(self, name, value):
-#         self.name = name
-#         self.value = value
+class NodeCofig(object):
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def __getitem__(self, item):
+        result = self.value.get(item)
+        if result is None:
+            raise Exception('Item Not Foud')
+        elif isinstance(result, list) or isinstance(result, dict):
+            return NodeCofig(item, result)
+        else:
+            return result
+
+    def get_item_with_context_name(self, context_name=None):
+        if context_name is None:
+            current_context = self.value.get('current-context')
+
+        for item in self.value:
+            if item['name'] == current_context:
+                return NodeCofig(current_context, item)
 
 
 class Configuration(object):
 
-    def __init__(self, config_file=None):
-        self.config_file = config_file
-        self.config_dict = None
-        self.host = None
-        self.current_context = None
-        self.token = None
-        self.token_expiry = None
-
-    def init(self):
-        config_file = self.config_file if self.config_file else os.path.expanduser(DEFUALT_FILE_CONFIG)
-        self.config_dict = parse_as_yaml_file(config_file)
-        self.current_context = self.config_dict['current-context']
-
-        for item in self.config_dict['clusters']:
-            if item['name'] == self.current_context:
-                self.host = item['cluster']['server']
-
-        for item in self.config_dict['users']:
-            if item['name'] == self.current_context:
-                self.token = item['user']['auth-provider']['config']['expiry']
-                self.token_expiry = item['user']['auth-provider']['config']['access-token']
+    def __init__(self, config_dict):
+        self.config_dict = config_dict
+        self.node = NodeCofig('kube-config', config_dict)
+        self.context = None
+        self.cluster = None
+        self.user = None
 
     def token_is_expired(self):
         now = datetime.datetime.now()
@@ -48,16 +47,18 @@ class Configuration(object):
         return False
 
     def load_token(self):
-        if not self.token or self.token_is_expired():
-            self.refresh_gcp_token()
+        provider = self.node['users'].get_item_with_name()['user']
 
-        self.token = "Bearer %s" % self.token
-        return self.token
+        if 'access-token' not in provider or self.token_is_expired(provider):
+            self.refresh_gcp_token(provider)
 
-    def refresh_gcp_token(self):
+        token = "Bearer %s" % provider.get('access-token')
+        return token
+
+    def refresh_gcp_token(self, provider):
         credentials = self._refresh_credentials()
-        self.token = credentials.token
-        self.token_expiry = format_rfc3339(credentials.expiry)
+        provider['access-token'] = credentials.token
+        provider['expiry'] = credentials.expiry
 
     def _refresh_credentials(self):
         credentials, project_id = google.auth.default(
@@ -69,6 +70,7 @@ class Configuration(object):
 
 
 def load_config(config_file=None):
-    config = Configuration(config_file)
-    config.init()
-    return config
+
+    config_file = config_file if config_file else os.path.expanduser(DEFUALT_FILE_CONFIG)
+    config_dict = parse_as_yaml_file(config_file)
+    return Configuration(config_dict)
