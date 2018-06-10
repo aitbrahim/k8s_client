@@ -44,15 +44,19 @@ class Configuration(object):
             return True
         return False
 
-    def load_token(self, context_name):
+    def token(self, context_name):
         provider = self.node['users'].get_item_with_context_name(context_name)['user']
         if 'access-token' not in provider.value or self.token_is_expired(provider):
-            self.refresh_gcp_token(provider)
+            self._refresh_gcp_token(provider)
 
         token = "Bearer %s" % provider.value.get('access-token')
         return token
 
-    def refresh_gcp_token(self, provider):
+    def host(self, context_name):
+        host = self.node['clusters'].get_item_with_context_name(context_name)['cluster']['server']
+        return host
+
+    def _refresh_gcp_token(self, provider):
         credentials = self._refresh_credentials()
         provider.value['access-token'] = credentials.token
         provider.value['expiry'] = credentials.expiry

@@ -10,7 +10,6 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = expanduser("~/.config/gcloud/lega
 def main():
 
     config = load_config()
-    import pdb;pdb.set_trace()
 
     client = CoreV1Api()
     print("Listing pods for all namespace :")
