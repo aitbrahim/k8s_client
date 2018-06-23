@@ -13,8 +13,11 @@ def main():
     resp = client.list_pod_for_all_namespaces()
 
     for i in resp.get('items'):
-        print("%s\t%s\t%s" %
-              (i['status']['podIP'], i['metadata']['namespace'], i['metadata']['name']))
+        try:
+            print("%s\t%s\t%s" %
+                  (i['status']['podIP'], i['metadata']['namespace'], i['metadata']['name']))
+        except KeyError:
+            continue
 
 
 if __name__ == '__main__':
