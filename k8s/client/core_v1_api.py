@@ -6,4 +6,4 @@ class CoreV1Api(object):
         self.api_client = ApiClient()
 
     def list_pod_for_all_namespaces(self):
-        self.api_client.api_call('GET', 'api/v1/pods')
+        return self.api_client.api_call('GET', 'api/v1/namespaces/fugoki-monolith/pods')

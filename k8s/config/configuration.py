@@ -1,5 +1,7 @@
 import os
 import datetime
+import tempfile
+import base64
 import google.auth
 import google.auth.transport.requests
 from k8s.utils import parse_as_yaml_file
@@ -59,6 +61,22 @@ class Configuration(object):
         context_name = context_name if context_name else self.config_dict['current-context']
         host = self.node['clusters'].get_item_with_context_name(context_name)['cluster']['server']
         return host
+
+    @property
+    def ssl_ca_cert_path(self, context_name=None):
+        context_name = context_name if context_name else self.config_dict['current-context']
+        ca_cert = self.node['clusters'].get_item_with_context_name(context_name)['cluster']['certificate-authority-data']
+
+        ca_cert_base64 = base64.b64decode(
+            ca_cert
+        )
+
+        cert = tempfile.NamedTemporaryFile(delete=False)
+
+        with open(cert.name, 'w') as fh:
+            fh.write(ca_cert_base64)
+
+        return cert.name
 
     def _refresh_gcp_token(self, provider):
         credentials = self._refresh_credentials()

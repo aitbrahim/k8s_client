@@ -10,7 +10,11 @@ def main():
 
     client = CoreV1Api()
     print("Listing pods for all namespace :")
-    client.list_pod_for_all_namespaces()
+    resp = client.list_pod_for_all_namespaces()
+
+    for i in resp.get('items'):
+        print("%s\t%s\t%s" %
+              (i['status']['podIP'], i['metadata']['namespace'], i['metadata']['name']))
 
 
 if __name__ == '__main__':
