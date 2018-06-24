@@ -13,3 +13,12 @@ class CoreV1Api(object):
             url = 'api/v1/namespaces/{}/pods'.format(namespace)
 
         return self.api_client.api_call('GET', url)
+
+    def list_services(self, **kwargs):
+
+        namespace = kwargs.get('namespace')
+        url = 'api/v1/services'
+        if namespace:
+            url = 'api/v1/namespaces/{}/services'.format(namespace)
+
+        return self.api_client.api_call('GET', url)

@@ -27,5 +27,6 @@ def main():
     resp = client.list_pods(namespace='fugoki-monolith')
     display(resp)
 
+
 if __name__ == '__main__':
     main()
